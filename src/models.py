@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, Float
+from sqlalchemy import Column, ForeignKey, Integer, String, Date, Table, Numeric, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -8,8 +8,39 @@ from eralchemy import render_er
 
 Base = declarative_base()
 
+personaje_pelicula = Table('personaje_pelicula', Base.metadata,
+    Column('personaje_id', ForeignKey('personajes.id'), nullable=False),
+    Column('pelicula_id', ForeignKey('peliculas.id'), nullable=False)
+)
+personaje_especie = Table('personaje_especie', Base.metadata,
+    Column('personaje_id', ForeignKey('personajes.id'), nullable=False),
+    Column('especie_id', ForeignKey('especies.id'), nullable=False)
+)
+
+pelicula_nave = Table('pelicula_nave', Base.metadata,
+    Column('pelicula_id', ForeignKey('peliculas.id'), nullable=False),
+    Column('nave_id', ForeignKey('naves.id'), nullable=False)
+)
+
+pelicula_vehiculo = Table('pelicula_vehiculo', Base.metadata,
+    Column('pelicula_id', ForeignKey('peliculas.id'), nullable=False),
+    Column('vehiculo_id', ForeignKey('vehiculos.id'), nullable=False)
+)
+
+
+usuario_personajes_favoritos = Table('usuario_personajes_favoritos', Base.metadata,
+    Column('usuario_id', ForeignKey('usuarios.id'), nullable=False),
+    Column('personaje_id', ForeignKey('personajes.id'), nullable=False)
+)
+
+usuario_planetas_favoritos = Table('usuario_planetas_favoritos', Base.metadata,
+    Column('usuario_id', ForeignKey('usuarios.id'), nullable=False),
+    Column('planeta_id', ForeignKey('planetas.id'), nullable=False)
+)
+
+
 class Personaje(Base):
-    __tablename__ = 'personaje'
+    __tablename__ = 'personajes'
     id = Column(Integer, primary_key=True)
     nombre= Column(String)
     Estatura = Column(Integer)
@@ -17,13 +48,13 @@ class Personaje(Base):
     Color_Pelo = Column(String)
     color_piel = Column(String)
     planeta_id = Column(Integer, ForeignKey('planeta.id'))
-
-    Personaje_pelicula = relationship("Film",secondary=character_film)
-    Personaje_especie = relationship("Specie",secondary=character_specie)
+    planeta = relationship("Planeta")
+    Personaje_pelicula = relationship("Pelicula",secondary=personaje_pelicula)
+    Personaje_especie = relationship("Especie",secondary=personaje_especie)
     
 
 class Planeta(Base):
-    __tablename__ = 'planeta'
+    __tablename__ = 'planetas'
     id = Column(Integer, primary_key=True)
     Creado = Column(Date)
     Nombre = Column(String)
@@ -35,30 +66,18 @@ class Planeta(Base):
     Periodo_rotacion = Column(Numeric)
     Superficie_agua = Column(Numeric)
     Terreno = Column(String)
-    
-    Caracteres = relationship('personaje')
 
 class Usuario(Base):
-    __tablename__ = 'usuario'
+    __tablename__ = 'usuarios'
     id = Column(Integer, primary_key=True)
     Creado = Column(Date)
     Actualizado = Column(Date)
     Nombre_usuario = Column(String)
     Correo = Column(String)
     Contraseña = Column(String)
-    Personajes_favoritos = relationship("Personaje",secondary=user_character_favorites)
-    Planetas_favoritos = relationship("Planeta",secondary=user_character_favorites)
+    Personajes_favoritos = relationship("Personaje",secondary=usuario_personajes_favoritos)
+    Planetas_favoritos = relationship("Planeta",secondary=usuario_planetas_favoritos)
     
-
-user_character_favorites = Table('user_character_favorites', Base.metadata,
-    Column('id_usuario', ForeignKey('usuario.id'), nullable=False),
-    Column('id_personaje', ForeignKey('personaje.id'), nullable=False)
-)
-
-user_planet_favorites = Table('user_planet_favorites', Base.metadata,
-    Column('user_id', ForeignKey('user.id'), nullable=False),
-    Column('planet_id', ForeignKey('planet.id'), nullable=False)
-)
 
 class Pelicula(Base):
     __tablename__ = 'peliculas'
@@ -66,9 +85,9 @@ class Pelicula(Base):
     titulo = Column(String)
     director = Column(String)
     productor = Column(String)
-    pelicula_nave = relationship("Starship",secondary=film_starship)
-    pelicula_vehiculo = relationship("Vehicle",secondary=film_vehicle)
-    # and some others ... :P
+    pelicula_nave = relationship("Nave",secondary=pelicula_nave)
+    pelicula_vehiculo = relationship("Vehiculo",secondary=pelicula_vehiculo)
+    
 
 class Vehiculo(Base):
     __tablename__ = 'vehiculos'
@@ -77,7 +96,6 @@ class Vehiculo(Base):
     modelo = Column(String)
     pasajeros = Column(Integer)
     largo = Column(Float)
-    # and some others ... :P
 
 class Nave(Base):
     __tablename__ = 'naves'
@@ -86,7 +104,6 @@ class Nave(Base):
     modelo = Column(String)
     pasajeros = Column(Numeric)
     largo = Column(Numeric)
-    # and some others ... :P
 
 class Especie(Base):
     __tablename__ = 'especies'
@@ -95,30 +112,11 @@ class Especie(Base):
     lenguaje = Column(String)
     designacion = Column(String)
     color_ojos = Column(String)
-    homeworld = relationship('Planeta', back_populates="species")
-    # and some others ... :P
+    homeworld = relationship('Planeta', back_populates="especies")
 
 
 
-character_film = Table('character_film', Base.metadata,
-    Column('character_id', ForeignKey('character.id'), nullable=False),
-    Column('film_id', ForeignKey('film.id'), nullable=False)
-)
 
-film_starship = Table('film_starship', Base.metadata,
-    Column('film_id', ForeignKey('film.id'), nullable=False),
-    Column('starship_id', ForeignKey('starship.id'), nullable=False)
-)
-
-film_vehicle = Table('film_vehicle', Base.metadata,
-    Column('film_id', ForeignKey('film.id'), nullable=False),
-    Column('vehicle_id', ForeignKey('vehicle.id'), nullable=False)
-)
-
-character_specie = Table('character_specie', Base.metadata,
-    Column('character_id', ForeignKey('character.id'), nullable=False),
-    Column('specie_id', ForeignKey('specie.id'), nullable=False)
-)
 
 
 ## Draw from SQLAlchemy base
